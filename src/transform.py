@@ -12,13 +12,13 @@ def load_raw_data(cidade: str):
     arquivos = glob.glob(f"raw/clima_openmeteo_{cidade}_*.json")
     
     if not arquivos:
-        print(f"⚠️ Nenhum arquivo encontrado para {cidade}")
+        print(f"Nenhum arquivo encontrado para {cidade}")
         return None
 
     # 2. Pegamos o arquivo mais recente (o último da lista)
     arquivo_recente = max(arquivos, key=os.path.getctime)
     
-    print(f"📖 Lendo dados de: {arquivo_recente}")
+    print(f"Lendo dados de: {arquivo_recente}")
     
     with open(arquivo_recente, 'r', encoding='utf-8') as f:
         dados = json.load(f)
@@ -51,7 +51,7 @@ def transform_to_dataframe(dados_json):
 
     return df
 
-#BLOCO TESTE PARA VER O RESULTADO NO TERMINAL
+#BLOCO TESTE PARA VER O RESULTADO 
 
 if __name__ == "__main__":
     cidade_teste = "Sao_Paulo"
@@ -69,7 +69,45 @@ if __name__ == "__main__":
         print("\n Resumo estatístico dos dados: ")
         print(df_limpo.describe())
 
-        print("\n🌡️ Temperatura Média por Mês:")
-        # O raciocínio: agrupar por mês, pegar a temperatura e tirar a média
+        print("\nTemperatura Média por Mês:")
+        # agrupar por mês, pegar a temperatura e tirar a média
         print(df_limpo.groupby('mes')['temperatura'].mean())
 
+def save_processed_data(df, cidade: str):
+    """
+    (LOAD)
+    """
+    os.makedirs('processed', exist_ok=True)
+    
+    clima_tempo = f"processed/clima_limpo_{cidade}.csv"
+
+    df.to_csv(clima_tempo, index=False, encoding='utf-8')
+    
+    print(f"Guardado em: {clima_tempo}")
+
+print("\nVerificando")
+print(df_limpo.info())
+
+print("\nNulos")
+print(df_limpo.isna().sum())
+
+if __name__ == "__main__":
+    cidades = ["Sao_Paulo", "Belo_Horizonte", "Presidente_Prudente", "Sao_Jose_do_Rio_Preto"]
+    
+    print(f"Iniciando Processamento de {len(cidades)} cidades...\n")
+
+    for cidade in cidades:
+        print(f"--- Processando: {cidade} ---")
+        
+        dados_brutos = load_raw_data(cidade)
+        
+        if dados_brutos:
+            df_limpo = transform_to_dataframe(dados_brutos)
+            
+            #Resultados
+            save_processed_data(df_limpo, cidade)
+            print(f" {cidade} finalizada com sucesso!\n")
+        else:
+            print(f" Pulando {cidade} por falta de dados.\n")
+
+    print("PROCESSO TOTAL CONCLUÍDO!")
